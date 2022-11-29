@@ -9,6 +9,16 @@ custom:
 provider:
     name: aws
     runtime: nodejs16.x
+    httpApi:
+        authorizers:
+            customAuthorizer:
+                name: tournamentApiAuth
+                type: request
+                functionArn: arn:aws:lambda:us-east-1:210658735751:function:tournament-api-auth
+                enableSimpleResponses: true
+                payloadVersion: '2.0'
+                identitySource:
+                    - $request.header.Authorization
     iam:
         role:
             statements:
@@ -26,10 +36,22 @@ provider:
         USERS_TABLE: ${self:custom.tableName}
 
 functions:
-    api:
+    getUser:
         handler: src/handler.handler
         events:
-            - httpApi: '*'
+            - httpApi:
+                  method: get
+                  path: /users/{userId}
+                  authorizer:
+                      name: customAuthorizer
+    addUser:
+        handler: src/handler.handler
+        events:
+            - httpApi:
+                  method: post
+                  path: /users
+                  authorizer:
+                      name: customAuthorizer
 
 resources:
     Resources:
